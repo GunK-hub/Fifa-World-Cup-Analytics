@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+
 def render_player_profile(
     df,
     name_column,
@@ -14,12 +15,14 @@ def render_player_profile(
     st.markdown(
         """
         <div class="section-kicker">PLAYER DEEP DIVE</div>
+
         <div class="section-title">
             Explore an individual player's performance
         </div>
         """,
         unsafe_allow_html=True,
     )
+
     if df.empty or not name_column:
         st.info("Player profile data is not available.")
         return
@@ -50,29 +53,30 @@ def render_player_profile(
         if position_column
         else "N/A"
     )
+
     player_nationality = player_data.get(
-    "nationality",
-    "N/A",
+        "nationality",
+        "N/A",
     )
 
     player_club = player_data.get(
-    "club",
-    "N/A",
+        "club",
+        "N/A",
     )
 
     st.markdown(
-        f"""
-        <div class="profile-card">
-            <div class="profile-name">
-                {selected_player}
-            </div>
-            <div class="profile-position">
-                {player_position} · {player_nationality} · {player_club}
-            </div>
+    f"""<div class="profile-card">
+        <div class="profile-name">{selected_player}</div>
+        <div class="profile-position">
+        {player_position} · {player_nationality} · {player_club}
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        </div>""",
+            unsafe_allow_html=True,
+        )
+
+    # --------------------------------
+    # Player metrics
+    # --------------------------------
 
     goals = pd.to_numeric(
         player_data.get("goals_scored", 0),
@@ -104,40 +108,89 @@ def render_player_profile(
         errors="coerce",
     )
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric("Goals", goals)
-
-    with col2:
-        st.metric("Assists", assists)
-
-    with col3:
-        st.metric("Dribbles / 90", dribbles)
-
-    col4, col5, col6 = st.columns(3)
-
-    with col4:
-        st.metric("Tackles / 90", tackles)
-
-    with col5:
-        st.metric("Interceptions / 90", interceptions)
-
-    with col6:
-        st.metric("Duels Won / 90", duels)
-
-        performance_index = pd.to_numeric(
+    performance_index = pd.to_numeric(
         player_data.get("performance_index", 0),
         errors="coerce",
     )
 
-    if pd.isna(performance_index):
-        performance_index = 0
+    # Replace missing values with 0
+    values = [
+        goals,
+        assists,
+        dribbles,
+        tackles,
+        interceptions,
+        duels,
+        performance_index,
+    ]
 
+    values = [
+        0 if pd.isna(value) else float(value)
+        for value in values
+    ]
+
+    (
+        goals,
+        assists,
+        dribbles,
+        tackles,
+        interceptions,
+        duels,
+        performance_index,
+    ) = values
+
+    # --------------------------------
+    # KPI cards
+    # --------------------------------
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
         st.metric(
+            "Goals",
+            goals,
+        )
+
+    with col2:
+        st.metric(
+            "Assists",
+            assists,
+        )
+
+    with col3:
+        st.metric(
+            "Dribbles / 90",
+            dribbles,
+        )
+
+    col4, col5, col6 = st.columns(3)
+
+    with col4:
+        st.metric(
+            "Tackles / 90",
+            tackles,
+        )
+
+    with col5:
+        st.metric(
+            "Interceptions / 90",
+            interceptions,
+        )
+
+    with col6:
+        st.metric(
+            "Duels Won / 90",
+            duels,
+        )
+
+    st.metric(
         "Performance Index",
-        round(float(performance_index), 1),
+        round(performance_index, 1),
     )
+
+    # --------------------------------
+    # Performance breakdown
+    # --------------------------------
 
     chart_labels = [
         "Goals",
@@ -149,12 +202,12 @@ def render_player_profile(
     ]
 
     chart_values = [
-        float(goals),
-        float(assists),
-        float(dribbles),
-        float(tackles),
-        float(interceptions),
-        float(duels),
+        goals,
+        assists,
+        dribbles,
+        tackles,
+        interceptions,
+        duels,
     ]
 
     fig = go.Figure(
@@ -182,4 +235,4 @@ def render_player_profile(
         fig,
         use_container_width=True,
         key="player_profile_performance_breakdown",
-    )    
+    )

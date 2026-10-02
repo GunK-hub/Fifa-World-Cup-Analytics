@@ -5,6 +5,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+
+
 from src.position_analysis import calculate_position_index
 from src.player_comparison import render_player_comparison
 from src.ranking_ui import render_position_rankings
@@ -23,6 +25,14 @@ from src.advanced_visualizations import (
     render_position_performance_boxplot,
     render_top_players_by_position,
 )
+from src.nationality_analysis import render_nationality_analysis
+from src.correlation_analysis import render_correlation_analysis
+from src.statistical_insights import calculate_statistical_insights
+from src.player_clustering import (
+    calculate_player_clusters,
+    render_player_clusters,
+)
+from src.clustering_evaluation import render_clustering_evaluation
 
 # -----------------------------
 # Page configuration
@@ -1076,6 +1086,20 @@ with performance_tab:
         ranking_df,
         position_column=position_column,
     )
+
+    clustered_df = calculate_player_clusters(
+    ranking_df,
+    name_column,
+    )
+
+    statistical_insights = calculate_statistical_insights(
+    ranking_df,
+    name_column=name_column,
+    position_column=position_column,
+    nationality_column=nationality_column,
+    )
+
+
     goalkeeper_ranking_df = calculate_goalkeeper_index(
     ranking_df,
     position_column=position_column,
@@ -1096,7 +1120,7 @@ with performance_tab:
     )
 
     render_player_profile(
-    filtered_df,
+    ranking_df,
     name_column,
     position_column,
     )
@@ -1184,14 +1208,64 @@ with performance_tab:
        )
         render_top_players_by_position(
          ranking_df,
-       )  
+       )
+        render_nationality_analysis(
+        ranking_df,
+        nationality_column,
+        name_column,
+        top_n,
+       )
+
+        render_correlation_analysis(
+        ranking_df,
+        )
+
+        render_player_clusters(
+            clustered_df,
+            name_column,
+            position_column,
+        )
+        render_clustering_evaluation(
+        ranking_df,
+        clustered_df,
+        )
+
+        st.markdown(
+        '<div class="section-kicker">STATISTICAL INSIGHTS</div>',
+        unsafe_allow_html=True,
+       )
+
+        st.markdown(
+            """
+            <div class="section-title">
+                What does the data tell us?
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if statistical_insights:
+            for insight_name, insight_data in statistical_insights.items():
+
+                st.markdown(
+                    f"### {insight_name.replace('_', ' ').title()}"
+                )
+
+                if hasattr(insight_data, "style"):
+                    st.dataframe(
+                        insight_data,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                else:
+                    st.write(insight_data)
 
         with comparison_tab:
             render_player_comparison(
-        ranking_df,
-        name_column,
-        position_column,
-    )
+            ranking_df,
+            name_column,
+            position_column,
+        )
 
 
 with table_tab:
